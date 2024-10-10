@@ -116,8 +116,14 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
 
     if (point.x < node->point.x) {
         node->left = insert_point(node->left, point);
-    } else {
+    } else if (point.x > node->point.x) {
         node->right = insert_point(node->right, point);
+    } else {
+        if(point.y < node->point.y) {
+            node->left = insert_point(node->left, point);
+        } else {
+            node->right = insert_point(node->right, point);
+        }
     }
 
     node->height = 1 + max(get_height(node->left), get_height(node->right));
