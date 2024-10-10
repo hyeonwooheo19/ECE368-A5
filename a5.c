@@ -23,43 +23,16 @@ struct point_tree {
 };
 
 //Function Declarations
-struct point* get_points(char *filename, int *size);
-struct point_tree* build_point_tree(struct point *points, int size);
+struct point_tree* build_point_tree(char *filename);
 struct point_tree* insert_point(struct point_tree *node, struct point point);
 void free_point_tree(struct point_tree *head);
 bool is_in_radius(struct point point, struct circle circle);
 int get_count(struct point_tree *head, struct circle circle);
-int find_bigger(int a, int b);
+int max(int a, int b);
 int get_height(struct point_tree *node);
 int get_balance(struct point_tree *node);
 struct point_tree* right_rotate(struct point_tree *y);
 struct point_tree* left_rotate(struct point_tree *x);
-
-//get points from file and save in array. increase capacity by 2 to get smaller time complexity.
-struct point* get_points(char *filename, int *size) {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        return NULL;
-    }
-    
-    int cap = 1;
-    struct point *points = malloc(cap * sizeof(struct point));
-    *size = 0;
-    int x, y;
-
-    while (fscanf(file, "%d %d", &x, &y) == 2) {
-        if (*size >= cap) {
-            cap *= 2;
-            points = realloc(points, cap * sizeof(struct point));
-        }
-        points[*size].x = x;
-        points[*size].y = y;
-        (*size)++;
-    }
-    points = realloc(points, *size * sizeof(struct point));
-    fclose(file);
-    return points;
-}
 
 //find bigger number
 int max(int a, int b) {
@@ -112,11 +85,21 @@ struct point_tree* left_rotate(struct point_tree *x) {
 
 
 //build point tree from array of points
-struct point_tree* build_point_tree(struct point *points, int size) {
-    struct point_tree *head = NULL;
-    for (int i = 0; i < size; i++) {
-        head = insert_point(head, points[i]);
+struct point_tree* build_point_tree(char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        return NULL;
     }
+
+    struct point_tree *head = NULL;
+    int x, y;
+
+    while (fscanf(file, "%d %d", &x, &y) == 2) {
+        struct point point = {x, y};
+        head = insert_point(head, point);
+    }
+
+    fclose(file);
     return head;
 }
 
@@ -205,25 +188,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int points_size;
-    struct point *points = get_points(argv[1], &points_size);
-    if (points == NULL) {
+    struct point_tree *tree = build_point_tree(argv[1]);
+    if(tree == NULL){
         return 1;
     }
-
-    struct point_tree *tree = build_point_tree(points, points_size);
-
     struct circle circle;
 
     while(scanf("%d %d %d", &circle.x, &circle.y, &circle.radius) == 3) {
-        int count = 0;
-        for (int i = 0; i < points_size; i++) {
-            count = get_count(tree, circle);
-        }
+        int count = get_count(tree, circle);
         printf("%d\n", count);
     }
 
-    free(points);
     free_point_tree(tree);
     return 0;
 }
