@@ -34,6 +34,7 @@ int get_height(struct point_tree *node);
 int get_balance(struct point_tree *node);
 struct point_tree* right_rotate(struct point_tree *y);
 struct point_tree* left_rotate(struct point_tree *x);
+int compare_points(struct point point1, struct point point2);
 
 //find bigger number
 int max(int a, int b) {
@@ -84,6 +85,17 @@ struct point_tree* left_rotate(struct point_tree *x) {
     return y;
 }
 
+//compare two points.
+//return negative if point1 is smaller than point2
+//return positive if point1 is bigger than point2
+//return 0 if point1 is equal to point2
+int compare_points(struct point point1, struct point point2) {
+    if(point1.x != point2.x) {
+        return point1.x - point2.x;
+    } else {
+        return point1.y - point2.y;
+    }
+}
 
 //build point tree from array of points
 struct point_tree* build_point_tree(char *filename) {
@@ -116,35 +128,32 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
         return new_node;
     }
 
-    if (point.x < node->point.x) {
+    int comparison = compare_points(point, node->point);
+
+    if (comparison < 0) {
         node->left = insert_point(node->left, point);
-    } else if (point.x > node->point.x) {
+    } else if (comparison > 0) {
         node->right = insert_point(node->right, point);
     } else {
-        if(point.y < node->point.y) {
-            node->left = insert_point(node->left, point);
-        } else if(point.y > node->point.y) {
-            node->right = insert_point(node->right, point);
-        } else {
-            node->count++;
-        }
+        node->count++;
+        return node;
     }
 
     node->height = 1 + max(get_height(node->left), get_height(node->right));
 
     int balance = get_balance(node);
 
-    if(balance > 1 && point.x < node->left->point.x) {
+    if(balance > 1 && compare_points(point, node->left->point) < 0) {
         return right_rotate(node);
     }
-    if(balance < -1 && point.x > node->right->point.x) {
+    if(balance < -1 && compare_points(point, node->right->point) < 0) {
         return left_rotate(node);
     }
-    if(balance > 1 && point.x > node->left->point.x) {
+    if(balance > 1 && compare_points(point, node->left->point) < 0) {
         node->left = left_rotate(node->left);
         return right_rotate(node);
     }
-    if(balance < -1 && point.x < node->right->point.x) {
+    if(balance < -1 && compare_points(point, node->right->point) < 0) {
         node->right = right_rotate(node->right);
         return left_rotate(node);
     }
@@ -176,13 +185,13 @@ int get_count (struct point_tree *head, struct circle circle) {
     int count = 0;
     
     int x = head->point.x - circle.x;
-    
+
     if(x < -circle.radius) {
         count += get_count(head->right, circle);
     } else if(x > circle.radius) {
         count += get_count(head->left, circle);
     } else {
-        if(is_in_radius(head->point, circle)) {
+        if (is_in_radius(head->point, circle)) {
             count += head->count;
         }
         count += get_count(head->left, circle);
