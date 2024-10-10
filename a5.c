@@ -46,9 +46,15 @@ bool is_in_radius(struct point point, struct circle circle) {
 }
 
 //main function
-int main() {
+int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        return 1;
+    }
+
+
     int points_size;
-    struct point *points = get_points("p0.txt", &points_size);
+    struct point *points = get_points(argv[1], &points_size);
     if (points == NULL) {
         return 1;
     }
