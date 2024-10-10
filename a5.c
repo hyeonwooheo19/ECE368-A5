@@ -159,6 +159,7 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
     return node;
 }
 
+//free point tree
 void free_point_tree(struct point_tree *head) {
     if (head == NULL) {
         return;
