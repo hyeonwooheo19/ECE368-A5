@@ -183,12 +183,10 @@ int get_count (struct point_tree *head, struct circle circle) {
     }
 
     int count = 0;
-    
-    int x = head->point.x - circle.x;
 
-    if(x < -circle.radius) {
+    if (head->point.x < circle.x - circle.radius) {
         count += get_count(head->right, circle);
-    } else if(x > circle.radius) {
+    } else if (head->point.x > circle.x + circle.radius) {
         count += get_count(head->left, circle);
     } else {
         if (is_in_radius(head->point, circle)) {
