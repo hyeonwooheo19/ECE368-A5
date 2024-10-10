@@ -14,13 +14,17 @@ struct point {
     int x, y;
 };
 
+struct linked_list {
+    int y;
+    struct linked_list *next;
+};
 //struct of the point tree, contains point and left and right subtree.
 struct point_tree {
     struct point point;
     struct point_tree *left;
     struct point_tree *right;
     int height;
-    int count;
+    struct linked_list *y_list;
 };
 
 //Function Declarations
@@ -34,7 +38,6 @@ int get_height(struct point_tree *node);
 int get_balance(struct point_tree *node);
 struct point_tree* right_rotate(struct point_tree *y);
 struct point_tree* left_rotate(struct point_tree *x);
-int compare_points(struct point point1, struct point point2);
 
 //find bigger number
 int max(int a, int b) {
@@ -85,18 +88,6 @@ struct point_tree* left_rotate(struct point_tree *x) {
     return y;
 }
 
-//compare two points.
-//return negative if point1 is smaller than point2
-//return positive if point1 is bigger than point2
-//return 0 if point1 is equal to point2
-int compare_points(struct point point1, struct point point2) {
-    if(point1.x != point2.x) {
-        return point1.x - point2.x;
-    } else {
-        return point1.y - point2.y;
-    }
-}
-
 //build point tree from array of points
 struct point_tree* build_point_tree(char *filename) {
     FILE *file = fopen(filename, "r");
@@ -124,36 +115,36 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
         new_node->left = NULL;
         new_node->right = NULL;
         new_node->height = 1;
-        new_node->count = 1;
+        new_node->y_list = NULL;
         return new_node;
     }
 
-    int comparison = compare_points(point, node->point);
-
-    if (comparison < 0) {
+    if (point.x < node->point.x) {
         node->left = insert_point(node->left, point);
-    } else if (comparison > 0) {
+    } else if(point.x > node->point.x) {
         node->right = insert_point(node->right, point);
     } else {
-        node->count++;
-        return node;
+        struct linked_list *new_node = malloc(sizeof(struct linked_list));
+        new_node->y = point.y;
+        new_node->next = node->y_list;
+        node->y_list = new_node;
     }
 
     node->height = 1 + max(get_height(node->left), get_height(node->right));
 
     int balance = get_balance(node);
 
-    if(balance > 1 && compare_points(point, node->left->point) < 0) {
+    if(balance > 1 && point.x < node->left->point.x) {
         return right_rotate(node);
     }
-    if(balance < -1 && compare_points(point, node->right->point) < 0) {
+    if(balance < -1 && point.x > node->right->point.x) {
         return left_rotate(node);
     }
-    if(balance > 1 && compare_points(point, node->left->point) < 0) {
+    if(balance > 1 && point.x > node->left->point.x) {
         node->left = left_rotate(node->left);
         return right_rotate(node);
     }
-    if(balance < -1 && compare_points(point, node->right->point) < 0) {
+    if(balance < -1 && point.x < node->right->point.x) {
         node->right = right_rotate(node->right);
         return left_rotate(node);
     }
@@ -168,6 +159,11 @@ void free_point_tree(struct point_tree *head) {
     }
     free_point_tree(head->left);
     free_point_tree(head->right);
+    while(head->y_list != NULL) {
+        struct linked_list *temp = head->y_list;
+        head->y_list = head->y_list->next;
+        free(temp);
+    }
     free(head);
 }
 
@@ -183,14 +179,23 @@ int get_count (struct point_tree *head, struct circle circle) {
     }
 
     int count = 0;
+    
+    int x = head->point.x - circle.x;
 
-    if (head->point.x < circle.x - circle.radius) {
+    if(x < -circle.radius) {
         count += get_count(head->right, circle);
-    } else if (head->point.x > circle.x + circle.radius) {
+    } else if(x > circle.radius) {
         count += get_count(head->left, circle);
     } else {
         if (is_in_radius(head->point, circle)) {
-            count += head->count;
+            count++;
+        }
+        struct linked_list *temp = head->y_list;
+        while (temp != NULL) {
+            if (is_in_radius((struct point){head->point.x, temp->y}, circle)) {
+                count++;
+            }
+            temp = temp->next;
         }
         count += get_count(head->left, circle);
         count += get_count(head->right, circle);
