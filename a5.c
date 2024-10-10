@@ -20,6 +20,7 @@ struct point_tree {
     struct point_tree *left;
     struct point_tree *right;
     int height;
+    int count;
 };
 
 //Function Declarations
@@ -111,6 +112,7 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
         new_node->left = NULL;
         new_node->right = NULL;
         new_node->height = 1;
+        new_node->count = 1;
         return new_node;
     }
 
@@ -121,8 +123,10 @@ struct point_tree* insert_point(struct point_tree *node, struct point point) {
     } else {
         if(point.y < node->point.y) {
             node->left = insert_point(node->left, point);
-        } else {
+        } else if(point.y > node->point.y) {
             node->right = insert_point(node->right, point);
+        } else {
+            node->count++;
         }
     }
 
@@ -172,14 +176,14 @@ int get_count (struct point_tree *head, struct circle circle) {
     int count = 0;
     
     int x = head->point.x - circle.x;
-
+    
     if(x < -circle.radius) {
         count += get_count(head->right, circle);
     } else if(x > circle.radius) {
         count += get_count(head->left, circle);
     } else {
         if(is_in_radius(head->point, circle)) {
-            count++;
+            count += head->count;
         }
         count += get_count(head->left, circle);
         count += get_count(head->right, circle);
